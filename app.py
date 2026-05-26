@@ -7,14 +7,18 @@ st.set_page_config(page_title="🐍 Global Skorlu Yılan Oyunu", page_icon="🐍
 st.title("🐍 Dünyanın En Rekabetçi Yılan Oyunu")
 st.write("🏆 Adınızı yazın, rekoru kırın ve adınızı tüm dünyaya duyurun!")
 
+# ⚠️ ÖNEMLİ: kvdb.io'dan aldığın 20 haneli kodu aşağıdaki tırnakların içine yapıştır!
+# Örnek: BUCKET_ID = "A1b2C3d4E5f6G7h8I9j0"
+BUCKET_ID = "JpGwZHKhygNoF7KWdWrFH3"
+
 # --- OYUNUN HTML, CSS VE JAVASCRIPT KODLARI ---
-oyun_html = """
+oyun_html = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body {
+        body {{
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -24,15 +28,13 @@ oyun_html = """
             margin: 0;
             user-select: none;
             touch-action: manipulation;
-        }
+        }}
         
-        /* Ekran Yönetimi */
-        .ekran { display: none; width: 100%; max-width: 400px; text-align: center; }
-        .aktif { display: flex; flex-direction: column; align-items: center; }
+        .ekran {{ display: none; width: 100%; max-width: 400px; text-align: center; }}
+        .aktif {{ display: flex; flex-direction: column; align-items: center; }}
 
-        /* Giriş ve Bitiş Ekranı Tasarımları */
-        h2 { color: #4CAF50; margin-top: 10px; }
-        input {
+        h2 {{ color: #4CAF50; margin-top: 10px; }}
+        input {{
             padding: 12px;
             font-size: 16px;
             border: 2px solid #4CAF50;
@@ -42,8 +44,8 @@ oyun_html = """
             margin-bottom: 15px;
             width: 80%;
             text-align: center;
-        }
-        button {
+        }}
+        button {{
             padding: 12px 25px;
             font-size: 16px;
             font-weight: bold;
@@ -53,32 +55,30 @@ oyun_html = """
             border-radius: 8px;
             cursor: pointer;
             box-shadow: 0 4px #2e7d32;
-        }
-        button:active { transform: translateY(2px); box-shadow: 0 2px #2e7d32; }
+        }}
+        button:active {{ transform: translateY(2px); box-shadow: 0 2px #2e7d32; }}
 
-        /* Global Skor Tablosu Stili */
-        .skor-tablosu {
+        .skor-tablosu {{
             width: 90%;
             background-color: #2a2a2a;
             border-radius: 10px;
             padding: 15px;
             margin-top: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .skor-satir {
+        }}
+        .skor-satir {{
             display: flex;
             justify-content: space-between;
             padding: 8px 10px;
             border-bottom: 1px solid #3d3d3d;
             font-size: 16px;
-        }
-        .skor-satir:last-child { border-bottom: none; }
-        .derece-1 { color: #FFD700; font-weight: bold; }
-        .derece-2 { color: #C0C0C0; font-weight: bold; }
-        .derece-3 { color: #CD7F32; font-weight: bold; }
+        }}
+        .skor-satir:last-child {{ border-bottom: none; }}
+        .derece-1 {{ color: #FFD700; font-weight: bold; }}
+        .derece-2 {{ color: #C0C0C0; font-weight: bold; }}
+        .derece-3 {{ color: #CD7F32; font-weight: bold; }}
 
-        /* Oyun İçi Skor Barı */
-        .oyun-skor-bar {
+        .oyun-skor-bar {{
             display: flex;
             justify-content: space-between;
             width: 100%;
@@ -87,26 +87,24 @@ oyun_html = """
             font-weight: bold;
             margin-bottom: 5px;
             color: #4CAF50;
-        }
+        }}
 
-        /* Canvas */
-        canvas {
+        canvas {{
             border: 4px solid #4CAF50;
             background-color: #000;
             max-width: 90vw;
             height: auto;
-        }
+        }}
 
-        /* D-PAD (Mobil Butonlar) */
-        .dpad { display: flex; flex-direction: column; align-items: center; margin-top: 15px; width: 100%; max-width: 220px; }
-        .dpad-row { display: flex; justify-content: center; width: 100%; }
-        .dpad-btn {
+        .dpad {{ display: flex; flex-direction: column; align-items: center; margin-top: 15px; width: 100%; max-width: 220px; }}
+        .dpad-row {{ display: flex; justify-content: center; width: 100%; }}
+        .dpad-btn {{
             width: 60px; height: 50px; margin: 4px; background-color: #333; color: white;
             border: 2px solid #555; border-radius: 12px; font-size: 22px;
             display: flex; justify-content: center; align-items: center; box-shadow: 0 4px #222; cursor: pointer;
-        }
-        .dpad-btn:active { box-shadow: 0 0 #222; transform: translateY(4px); background-color: #4CAF50; }
-        .dpad-spacer { width: 60px; height: 50px; margin: 4px; }
+        }}
+        .dpad-btn:active {{ box-shadow: 0 0 #222; transform: translateY(4px); background-color: #4CAF50; }}
+        .dpad-spacer {{ width: 60px; height: 50px; margin: 4px; }}
     </style>
 </head>
 <body>
@@ -152,7 +150,7 @@ oyun_html = """
     </div>
 
     <script>
-        const DB_URL = "https://kvdb.io/efernolcr_snake_shared_v1/leaderboard";
+        const DB_URL = "https://kvdb.io/{BUCKET_ID}/leaderboard";
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         
@@ -162,95 +160,95 @@ oyun_html = """
         let oyuncuAdi = "Anonim";
         let oyunDongusu;
         
-        // Oyun ilk başta durarak başlayacak (dx: 0, dy: 0)
-        let yilan = { x: 160, y: 160, dx: 0, dy: 0, cells: [{x:160,y:160}], maxCells: 4 };
-        let elma = { x: 320, y: 320 };
+        let yilan = {{ x: 160, y: 160, dx: 0, dy: 0, cells: [{{x:160,y:160}}], maxCells: 4 }};
+        let elma = {{ x: 320, y: 320 }};
 
         dunyaSkorlariniGetir();
 
-        async function dunyaSkorlariniGetir() {
+        async function dunyaSkorlariniGetir() {{
             let skorlar = [];
-            try {
+            try {{
                 let response = await fetch(DB_URL);
-                if (response.ok) { skorlar = await response.json(); }
-            } catch(e) { console.log("Veri çekme hatası."); }
+                if (response.ok) {{ 
+                    let text = await response.text();
+                    if(text.trim() !== "") {{ skorlar = JSON.parse(text); }}
+                }}
+            }} catch(e) {{ console.log("Veri çekme hatası veya ilk kurulum."); }}
             tabloyuCiz(skorlar);
-        }
+        }}
 
-        function tabloyuCiz(skorlar) {
+        function tabloyuCiz(skorlar) {{
             let htmlIcerik = "";
-            if (!skorlar || skorlar.length === 0) {
+            if (!skorlar || skorlar.length === 0) {{
                 htmlIcerik = "<div class='skor-satir'>Henüz rekor kıran yok! İlk sen ol!</div>";
-            } else {
-                skorlar.forEach((item, index) => {
-                    htmlIcerik += `<div class='skor-satir derece-${index+1}'>
-                        <span>${index+1}. ${item.name}</span>
-                        <span>${item.score} Puan</span>
+            }} else {{
+                skorlar.forEach((item, index) => {{
+                    htmlIcerik += `<div class='skor-satir derece-${{index+1}}'>
+                        <span>${{index+1}}. ${{item.name}}</span>
+                        <span>${{item.score}} Puan</span>
                     </div>`;
-                });
-            }
+                }});
+            }}
             document.getElementById("kuresel-skorlar-giris").innerHTML = htmlIcerik;
             document.getElementById("kuresel-skorlar-bitis").innerHTML = htmlIcerik;
-        }
+        }}
 
-        async function skoruBulutaKaydet(isim, alinanSkor) {
+        async function skoruBulutaKaydet(isim, alinanSkor) {{
             let skorlar = [];
-            try {
+            try {{
                 let response = await fetch(DB_URL);
-                if (response.ok) { skorlar = await response.json(); }
-            } catch(e) {}
+                if (response.ok) {{ 
+                    let text = await response.text();
+                    if(text.trim() !== "") {{ skorlar = JSON.parse(text); }}
+                }}
+            }} catch(e) {{}}
 
-            skorlar.push({ name: isim, score: alinanSkor });
+            skorlar.push({{ name: isim, score: alinanSkor }});
             skorlar.sort((a, b) => b.score - a.score);
             skorlar = skorlar.slice(0, 5);
 
-            try {
-                await fetch(DB_URL, { method: 'POST', body: JSON.stringify(skorlar) });
-            } catch(e) {}
+            try {{
+                await fetch(DB_URL, {{ method: 'POST', body: JSON.stringify(skorlar) }});
+            }} catch(e) {{}}
             
             tabloyuCiz(skorlar);
-        }
+        }}
 
-        function ekranDegistir(ekranId) {
+        function ekranDegistir(ekranId) {{
             document.querySelectorAll('.ekran').forEach(e => e.classList.remove('aktif'));
             document.getElementById(ekranId).classList.add('aktif');
-        }
+        }}
 
-        function oyunuBaslat() {
+        function oyunuBaslat() {{
             let girilenIsim = document.getElementById("oyuncu-adi").value.trim();
-            if (girilenIsim !== "") { oyuncuAdi = girilenIsim; }
+            if (girilenIsim !== "") {{ oyuncuAdi = girilenIsim; }}
             
             document.getElementById("bar-isim").textContent = oyuncuAdi;
             ekranDegistir("ekran-oyun");
             
             skor = 0;
             document.getElementById("bar-skor").textContent = skor;
-            
-            // Tamamen sabit başlatıyoruz, tuşa basılınca yürüyecek
-            yilan = { x: 160, y: 160, dx: 0, dy: 0, cells: [{x:160,y:160}], maxCells: 4 };
+            yilan = {{ x: 160, y: 160, dx: 0, dy: 0, cells: [{{x:160,y:160}}], maxCells: 4 }};
             elmaYerlestir();
             
-            // Sayfa odağını oyuna al (Klavye anında çalışsın)
             window.focus();
-            
-            if(!oyunDongusu) { loop(); }
-        }
+            if(!oyunDongusu) {{ loop(); }}
+        }}
 
-        function elmaYerlestir() {
+        function elmaYerlestir() {{
             elma.x = Math.floor(Math.random() * 20) * grid;
             elma.y = Math.floor(Math.random() * 20) * grid;
-        }
+        }}
 
-        function loop() {
+        function loop() {{
             oyunDongusu = requestAnimationFrame(loop);
 
-            if (++count < 11) { return; }
+            if (++count < 11) {{ return; }}
             count = 0;
 
             ctx.clearRect(0,0,canvas.width,canvas.height);
 
-            // Sadece hareket varsa yılan ilerlesin
-            if (yilan.dx !== 0 || yilan.dy !== 0) {
+            if (yilan.dx !== 0 || yilan.dy !== 0) {{
                 yilan.x += yilan.dx;
                 yilan.y += yilan.dy;
 
@@ -259,9 +257,9 @@ oyun_html = """
                 if (yilan.y < 0) yilan.y = canvas.height - grid;
                 else if (yilan.y >= canvas.height) yilan.y = 0;
 
-                yilan.cells.unshift({x: yilan.x, y: yilan.y});
-                if (yilan.cells.length > yilan.maxCells) { yilan.cells.pop(); }
-            }
+                yilan.cells.unshift({{x: yilan.x, y: yilan.y}});
+                if (yilan.cells.length > yilan.maxCells) {{ yilan.cells.pop(); }}
+            }}
 
             // Elma
             ctx.fillStyle = '#ff4d4d';
@@ -270,57 +268,55 @@ oyun_html = """
             ctx.fill();
 
             // Yılan
-            yilan.cells.forEach(function(cell, index) {
+            yilan.cells.forEach(function(cell, index) {{
                 ctx.fillStyle = (index === 0) ? '#81C784' : '#4CAF50';
                 ctx.fillRect(cell.x, cell.y, grid-1, grid-1);  
 
-                if (cell.x === elma.x && cell.y === elma.y) {
+                if (cell.x === elma.x && cell.y === elma.y) {{
                     yilan.maxCells++;
                     skor += 10;
                     document.getElementById("bar-skor").textContent = skor;
                     elmaYerlestir();
-                }
+                }}
 
-                for (let i = index + 1; i < yilan.cells.length; i++) {
-                    if (cell.x === yilan.cells[i].x && cell.y === yilan.cells[i].y && (yilan.dx !== 0 || yilan.dy !== 0)) {
+                for (let i = index + 1; i < yilan.cells.length; i++) {{
+                    if (cell.x === yilan.cells[i].x && cell.y === yilan.cells[i].y && (yilan.dx !== 0 || yilan.dy !== 0)) {{
                         oyunBitti();
-                    }
-                }
-            });
-        }
+                    }}
+                }}
+            }});
+        }}
 
-        function oyunBitti() {
+        function oyunBitti() {{
             cancelAnimationFrame(oyunDongusu);
             oyunDongusu = null;
             document.getElementById("bitis-skor").textContent = skor;
             document.getElementById("kuresel-skorlar-bitis").innerHTML = "Skorunuz dünya liderliğine kaydediliyor...";
             ekranDegistir("ekran-bitis");
             skoruBulutaKaydet(oyuncuAdi, skor);
-        }
+        }}
 
-        function yenidenOyna() {
+        function yenidenOyna() {{
             dunyaSkorlariniGetir();
             ekranDegistir("ekran-giris");
-        }
+        }}
 
-        function yonDegistir(yon) {
-            // Hareket kısıtlamaları (Kendi içine dönmeyi engelleme)
-            if (yon === 'LEFT' && yilan.dx === 0) { yilan.dx = -grid; yilan.dy = 0; }
-            else if (yon === 'UP' && yilan.dy === 0) { yilan.dy = -grid; yilan.dx = 0; }
-            else if (yon === 'RIGHT' && yilan.dx === 0) { yilan.dx = grid; yilan.dy = 0; }
-            else if (yon === 'DOWN' && yilan.dy === 0) { yilan.dy = grid; yilan.dx = 0; }
-        }
+        function yonDegistir(yon) {{
+            if (yon === 'LEFT' && yilan.dx === 0) {{ yilan.dx = -grid; yilan.dy = 0; }}
+            else if (yon === 'UP' && yilan.dy === 0) {{ yilan.dy = -grid; yilan.dx = 0; }}
+            else if (yon === 'RIGHT' && yilan.dx === 0) {{ yilan.dx = grid; yilan.dy = 0; }}
+            else if (yon === 'DOWN' && yilan.dy === 0) {{ yilan.dy = grid; yilan.dy = 0; }}
+        }}
 
-        // MODERN KLAVYE OKUMA SİSTEMİ (e.key)
-        document.addEventListener('keydown', function(e) {
-            if(["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].indexOf(e.key) > -1) {
-                e.preventDefault(); // Sayfa kaymasını önle
-            }
+        document.addEventListener('keydown', function(e) {{
+            if(["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].indexOf(e.key) > -1) {{
+                e.preventDefault();
+            }}
             if (e.key === "ArrowLeft") yonDegistir('LEFT');
             else if (e.key === "ArrowUp") yonDegistir('UP');
             else if (e.key === "ArrowRight") yonDegistir('RIGHT');
             else if (e.key === "ArrowDown") yonDegistir('DOWN');
-        });
+        }});
     </script>
 </body>
 </html>
