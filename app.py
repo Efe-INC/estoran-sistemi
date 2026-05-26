@@ -7,8 +7,7 @@ st.set_page_config(page_title="🐍 Global Skorlu Yılan Oyunu", page_icon="🐍
 st.title("🐍 Dünyanın En Rekabetçi Yılan Oyunu")
 st.write("🏆 Adınızı yazın, rekoru kırın ve adınızı tüm dünyaya duyurun!")
 
-# ⚠️ ÖNEMLİ: kvdb.io'dan aldığın 20 haneli kodu aşağıdaki tırnakların içine yapıştır!
-# Örnek: BUCKET_ID = "A1b2C3d4E5f6G7h8I9j0"
+# ⚠️ Kendi kvdb.io kodunu buraya yapıştırmayı unutma!
 BUCKET_ID = "JpGwZHKhygNoF7KWdWrFH3"
 
 # --- OYUNUN HTML, CSS VE JAVASCRIPT KODLARI ---
@@ -95,6 +94,9 @@ oyun_html = f"""
             max-width: 90vw;
             height: auto;
         }}
+        canvas:focus {{
+            outline: none; /* Odaklanınca etrafında çizgiler çıkmasın */
+        }}
 
         .dpad {{ display: flex; flex-direction: column; align-items: center; margin-top: 15px; width: 100%; max-width: 220px; }}
         .dpad-row {{ display: flex; justify-content: center; width: 100%; }}
@@ -125,7 +127,7 @@ oyun_html = f"""
             <div>Oyuncu: <span id="bar-isim" style="color:white;">-</span></div>
             <div>Skor: <span id="bar-skor">0</span></div>
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <canvas id="gameCanvas" width="400" height="400" tabindex="0"></canvas>
         
         <div class="dpad">
             <div class="dpad-row"><div class="dpad-btn" onclick="yonDegistir('UP')">▲</div></div>
@@ -173,7 +175,7 @@ oyun_html = f"""
                     let text = await response.text();
                     if(text.trim() !== "") {{ skorlar = JSON.parse(text); }}
                 }}
-            }} catch(e) {{ console.log("Veri çekme hatası veya ilk kurulum."); }}
+            }} catch(e) {{ console.log("Veri hatası."); }}
             tabloyuCiz(skorlar);
         }}
 
@@ -231,7 +233,12 @@ oyun_html = f"""
             yilan = {{ x: 160, y: 160, dx: 0, dy: 0, cells: [{{x:160,y:160}}], maxCells: 4 }};
             elmaYerlestir();
             
-            window.focus();
+            // Tıklama sonrası tam odaklanma sağlayan gecikmeli kilit sistemi
+            setTimeout(() => {{
+                window.focus();
+                canvas.focus();
+            }}, 50);
+
             if(!oyunDongusu) {{ loop(); }}
         }}
 
@@ -253,7 +260,7 @@ oyun_html = f"""
                 yilan.y += yilan.dy;
 
                 if (yilan.x < 0) yilan.x = canvas.width - grid;
-                else if (yilan.x >= canvas.width) yilan.x = 0;
+                else if (yilan.x >= canvas.width) yilan.width = 0;
                 if (yilan.y < 0) yilan.y = canvas.height - grid;
                 else if (yilan.y >= canvas.height) yilan.y = 0;
 
@@ -305,18 +312,25 @@ oyun_html = f"""
             if (yon === 'LEFT' && yilan.dx === 0) {{ yilan.dx = -grid; yilan.dy = 0; }}
             else if (yon === 'UP' && yilan.dy === 0) {{ yilan.dy = -grid; yilan.dx = 0; }}
             else if (yon === 'RIGHT' && yilan.dx === 0) {{ yilan.dx = grid; yilan.dy = 0; }}
-            else if (yon === 'DOWN' && yilan.dy === 0) {{ yilan.dy = grid; yilan.dy = 0; }}
+            else if (yon === 'DOWN' && yilan.dy === 0) {{ yilan.dy = grid; yilan.dx = 0; }}
         }}
 
-        document.addEventListener('keydown', function(e) {{
-            if(["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].indexOf(e.key) > -1) {{
-                e.preventDefault();
+        // GÜÇLENDİRİLMİŞ SAYFA KAYMASI ENGELLEYİCİ
+        window.addEventListener('keydown', function(e) {{
+            const engellenecekTuslar = ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown", "Left", "Up", "Right", "Down", " "];
+            if(engellenecekTuslar.indexOf(e.key) > -1) {{
+                e.preventDefault(); // Tarayıcının aşağı kaymasını KESİN olarak engeller
             }}
-            if (e.key === "ArrowLeft") yonDegistir('LEFT');
-            else if (e.key === "ArrowUp") yonDegistir('UP');
-            else if (e.key === "ArrowRight") yonDegistir('RIGHT');
-            else if (e.key === "ArrowDown") yonDegistir('DOWN');
-        }});
+            
+            const key = e.key;
+            if (key === "ArrowLeft" || key === "Left") yonDegistir('LEFT');
+            else if (key === "ArrowUp" || key === "Up") yonDegistir('UP');
+            else if (key === "ArrowRight" || key === "Right") yonDegistir('RIGHT');
+            else if (key === "ArrowDown" || key === "Down") yonDegistir('DOWN');
+        }}, {{ passive: false }}); // passive: false tarayıcının preventDefault'u görmezden gelmesini önler
+
+        // Fareyle oyuna tıklandığında da odağı kaybetmesin
+        canvas.addEventListener('click', () => canvas.focus());
     </script>
 </body>
 </html>
