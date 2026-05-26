@@ -8,7 +8,6 @@ st.title("🐍 Dünyanın En Rekabetçi Yılan Oyunu")
 st.write("🏆 Adınızı yazın, rekoru kırın ve adınızı tüm dünyaya duyurun!")
 
 # --- OYUNUN HTML, CSS VE JAVASCRIPT KODLARI ---
-# Not: kvdb.io servisi ile tüm oyuncuların skorları ortak bir havuzda tutulur.
 oyun_html = """
 <!DOCTYPE html>
 <html>
@@ -74,9 +73,9 @@ oyun_html = """
             font-size: 16px;
         }
         .skor-satir:last-child { border-bottom: none; }
-        .derece-1 { color: #FFD700; font-weight: bold; } /* Altın */
-        .derece-2 { color: #C0C0C0; font-weight: bold; } /* Gümüş */
-        .derece-3 { color: #CD7F32; font-weight: bold; } /* Bronz */
+        .derece-1 { color: #FFD700; font-weight: bold; }
+        .derece-2 { color: #C0C0C0; font-weight: bold; }
+        .derece-3 { color: #CD7F32; font-weight: bold; }
 
         /* Oyun İçi Skor Barı */
         .oyun-skor-bar {
@@ -153,9 +152,7 @@ oyun_html = """
     </div>
 
     <script>
-        // Veritabanı Ayarı (Senin projene özel benzersiz bir bulut odası oluşturduk)
         const DB_URL = "https://kvdb.io/efernolcr_snake_shared_v1/leaderboard";
-
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         
@@ -165,10 +162,10 @@ oyun_html = """
         let oyuncuAdi = "Anonim";
         let oyunDongusu;
         
-        let yilan = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
+        // Oyun ilk başta durarak başlayacak (dx: 0, dy: 0)
+        let yilan = { x: 160, y: 160, dx: 0, dy: 0, cells: [{x:160,y:160}], maxCells: 4 };
         let elma = { x: 320, y: 320 };
 
-        // Sayfa ilk açıldığında dünya skorlarını getir
         dunyaSkorlariniGetir();
 
         async function dunyaSkorlariniGetir() {
@@ -176,21 +173,22 @@ oyun_html = """
             try {
                 let response = await fetch(DB_URL);
                 if (response.ok) { skorlar = await response.json(); }
-            } catch(e) { console.log("Henüz kayıt yok veya hata oluştu."); }
+            } catch(e) { console.log("Veri çekme hatası."); }
             tabloyuCiz(skorlar);
         }
 
         function tabloyuCiz(skorlar) {
             let htmlIcerik = "";
-            if (skorlar.length === 0) {
+            if (!skorlar || skorlar.length === 0) {
                 htmlIcerik = "<div class='skor-satir'>Henüz rekor kıran yok! İlk sen ol!</div>";
+            } else {
+                skorlar.forEach((item, index) => {
+                    htmlIcerik += `<div class='skor-satir derece-${index+1}'>
+                        <span>${index+1}. ${item.name}</span>
+                        <span>${item.score} Puan</span>
+                    </div>`;
+                });
             }
-            skorlar.forEach((item, index) => {
-                htmlIcerik += `<div class='skor-satir derece-${index+1}'>
-                    <span>${index+1}. ${item.name}</span>
-                    <span>${item.score} Puan</span>
-                </div>`;
-            });
             document.getElementById("kuresel-skorlar-giris").innerHTML = htmlIcerik;
             document.getElementById("kuresel-skorlar-bitis").innerHTML = htmlIcerik;
         }
@@ -202,7 +200,6 @@ oyun_html = """
                 if (response.ok) { skorlar = await response.json(); }
             } catch(e) {}
 
-            // Yeni skoru ekle, büyükten küçüğe sırala ve sadece ilk 5 kişiyi tut
             skorlar.push({ name: isim, score: alinanSkor });
             skorlar.sort((a, b) => b.score - a.score);
             skorlar = skorlar.slice(0, 5);
@@ -226,11 +223,15 @@ oyun_html = """
             document.getElementById("bar-isim").textContent = oyuncuAdi;
             ekranDegistir("ekran-oyun");
             
-            // Oyunu sıfırla ve başlat
             skor = 0;
             document.getElementById("bar-skor").textContent = skor;
-            yilan = { x: 160, y: 160, dx: grid, dy: 0, cells: [{x:160,y:160}], maxCells: 4 };
+            
+            // Tamamen sabit başlatıyoruz, tuşa basılınca yürüyecek
+            yilan = { x: 160, y: 160, dx: 0, dy: 0, cells: [{x:160,y:160}], maxCells: 4 };
             elmaYerlestir();
+            
+            // Sayfa odağını oyuna al (Klavye anında çalışsın)
+            window.focus();
             
             if(!oyunDongusu) { loop(); }
         }
@@ -243,35 +244,36 @@ oyun_html = """
         function loop() {
             oyunDongusu = requestAnimationFrame(loop);
 
-            if (++count < 11) { return; } // Hız dengesi
+            if (++count < 11) { return; }
             count = 0;
 
             ctx.clearRect(0,0,canvas.width,canvas.height);
 
-            yilan.x += yilan.dx;
-            yilan.y += yilan.dy;
+            // Sadece hareket varsa yılan ilerlesin
+            if (yilan.dx !== 0 || yilan.dy !== 0) {
+                yilan.x += yilan.dx;
+                yilan.y += yilan.dy;
 
-            // Duvarlardan geçiş telesportasyonu
-            if (yilan.x < 0) yilan.x = canvas.width - grid;
-            else if (yilan.x >= canvas.width) yilan.x = 0;
-            if (yilan.y < 0) yilan.y = canvas.height - grid;
-            else if (yilan.y >= canvas.height) yilan.y = 0;
+                if (yilan.x < 0) yilan.x = canvas.width - grid;
+                else if (yilan.x >= canvas.width) yilan.x = 0;
+                if (yilan.y < 0) yilan.y = canvas.height - grid;
+                else if (yilan.y >= canvas.height) yilan.y = 0;
 
-            yilan.cells.unshift({x: yilan.x, y: yilan.y});
-            if (yilan.cells.length > yilan.maxCells) { yilan.cells.pop(); }
+                yilan.cells.unshift({x: yilan.x, y: yilan.y});
+                if (yilan.cells.length > yilan.maxCells) { yilan.cells.pop(); }
+            }
 
-            // Elma Çizimi
+            // Elma
             ctx.fillStyle = '#ff4d4d';
             ctx.beginPath();
             ctx.arc(elma.x + grid/2, elma.y + grid/2, grid/2 - 1, 0, 2 * Math.PI);
             ctx.fill();
 
-            // Yılan Çizimi
+            // Yılan
             yilan.cells.forEach(function(cell, index) {
                 ctx.fillStyle = (index === 0) ? '#81C784' : '#4CAF50';
                 ctx.fillRect(cell.x, cell.y, grid-1, grid-1);  
 
-                // Elma yendi mi?
                 if (cell.x === elma.x && cell.y === elma.y) {
                     yilan.maxCells++;
                     skor += 10;
@@ -279,9 +281,8 @@ oyun_html = """
                     elmaYerlestir();
                 }
 
-                // Kendine çarpma ölme kontrolü
                 for (let i = index + 1; i < yilan.cells.length; i++) {
-                    if (cell.x === yilan.cells[i].x && cell.y === yilan.cells[i].y) {
+                    if (cell.x === yilan.cells[i].x && cell.y === yilan.cells[i].y && (yilan.dx !== 0 || yilan.dy !== 0)) {
                         oyunBitti();
                     }
                 }
@@ -303,23 +304,26 @@ oyun_html = """
         }
 
         function yonDegistir(yon) {
+            // Hareket kısıtlamaları (Kendi içine dönmeyi engelleme)
             if (yon === 'LEFT' && yilan.dx === 0) { yilan.dx = -grid; yilan.dy = 0; }
             else if (yon === 'UP' && yilan.dy === 0) { yilan.dy = -grid; yilan.dx = 0; }
             else if (yon === 'RIGHT' && yilan.dx === 0) { yilan.dx = grid; yilan.dy = 0; }
-            else if (yon === 'DOWN' && yilan.dy === 0) { yilan.dy = grid; yilan.dy = 0; }
+            else if (yon === 'DOWN' && yilan.dy === 0) { yilan.dy = grid; yilan.dx = 0; }
         }
 
+        // MODERN KLAVYE OKUMA SİSTEMİ (e.key)
         document.addEventListener('keydown', function(e) {
-            if([37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
-            if (e.which === 37) yonDegistir('LEFT');
-            else if (e.which === 38) yonDegistir('UP');
-            else if (e.which === 39) yonDegistir('RIGHT');
-            else if (e.which === 40) yonDegistir('DOWN');
+            if(["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].indexOf(e.key) > -1) {
+                e.preventDefault(); // Sayfa kaymasını önle
+            }
+            if (e.key === "ArrowLeft") yonDegistir('LEFT');
+            else if (e.key === "ArrowUp") yonDegistir('UP');
+            else if (e.key === "ArrowRight") yonDegistir('RIGHT');
+            else if (e.key === "ArrowDown") yonDegistir('DOWN');
         });
     </script>
 </body>
 </html>
 """
 
-# Mobil butonların rahat sığması için yüksekliği artırdık
 components.html(oyun_html, height=700)
