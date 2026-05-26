@@ -1,58 +1,177 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
-# Web sayfasının başlığı ve açıklaması
-st.title("🍔 Dijital Restoran Sipariş Sistemi")
-st.write("Lütfen aşağıdaki bilgileri doldurarak siparişinizi veriniz.")
+# Sayfa Ayarları
+st.set_page_config(page_title="🐍 Yılan Oyunu", page_icon="🐍", layout="centered")
 
-# Web arayüzündeki girdi alanları
-isim = st.text_input("Adınız nedir?")
-yemek = st.text_input("Ne yiyeceksiniz? (tantuni, kebap, makarna)")
-icecek = st.text_input("Ne içeceksiniz? (kola, ayran, su)")
-masa = st.text_input("Kaç numaralı masaya oturacaksınız?")
+st.title("🐍 Python & Web Yılan Oyunu")
+st.write("👉 **ÖNEMLİ:** Oyunu oynamak için önce aşağıdaki siyah alana **FAREYLE BİR KEZ TIKLAYIN**, ardından yön tuşlarıyla yılanı hareket ettirin.")
 
-# Cinsiyet seçimi
-cinsiyetiniz = st.radio("Cinsiyetiniz nedir?", ["erkek", "kadın"])
+# --- OYUNUN HTML VE JAVASCRIPT KODLARI ---
+oyun_html = """
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1e1e1e;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            user-select: none;
+        }
+        canvas {
+            border: 4px solid #4CAF50;
+            background-color: #000;
+            box-shadow: 0px 0px 20px rgba(76, 175, 80, 0.5);
+            cursor: pointer;
+        }
+        #skor-tablosu {
+            font-size: 24px;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="skor-tablosu">Skor: <span id="skor">0</span></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
 
-# Kullanıcı bu butona bastığında işlemler başlayacak
-if st.button("Siparişi Onayla"):
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const skorElementi = document.getElementById("skor");
 
-    isimsınırı = len(isim)
-    toplam_hesap = 0
+        const grid = 20;
+        let count = 0;
+        let skor = 0;
+        let oyunBasladi = false;
+        
+        let yilan = {
+            x: 160,
+            y: 160,
+            dx: 0,  // Başlangıçta sağa gitmesin, dursun (0 yaptık)
+            dy: 0,  // Başlangıçta duruyor
+            cells: [{x: 160, y: 160}, {x: 140, y: 160}],
+            maxCells: 4
+        };
+        
+        let elma = { x: 320, y: 320 };
 
-    # 1. HATA KONTROLÜ: İsim sınırı
-    if isimsınırı > 10:
-        st.error("Hata! İsminiz 10 karakterden büyük olamaz.")
+        function rastgeleSayi(min, max) {
+            return Math.floor(Math.random() * (max - min) + min);
+        }
 
-    # 2. HATA KONTROLÜ: Yemek menüde var mı?
-    elif yemek not in ["tantuni", "kebap", "makarna"]:
-        st.error("Hata! Maalesef sadece tantuni, kebap veya makarna servisimiz vardır.")
+        function elmaYerlestir() {
+            elma.x = rastgeleSayi(0, 20) * grid;
+            elma.y = rastgeleSayi(0, 20) * grid;
+        }
 
-    # HER ŞEY YOLUNDAYSA
-    else:
-        # --- YEMEK FİYATLANDIRMASI ---
-        if yemek == "tantuni":
-            toplam_hesap += 150
-        elif yemek == "kebap":
-            toplam_hesap += 250
-        elif yemek == "makarna":
-            toplam_hesap += 120
+        function loop() {
+            requestAnimationFrame(loop);
 
-        # --- İÇECEK FİYATLANDIRMASI ---
-        if icecek == "kola":
-            toplam_hesap += 40
-        elif icecek == "ayran":
-            toplam_hesap += 25
-        elif icecek == "su":
-            toplam_hesap += 10
-        else:
-            toplam_hesap += 30
+            // HIZ AYARI: 6 olan değeri 12 yaptık, böylece oyun 2 kat yavaşladı!
+            if (++count < 12) { return; }
+            count = 0;
 
-            # --- SİPARİŞİ VE HESABI EKRANA YAZDIRMA ---
-        hitap = "Bey" if cinsiyetiniz == "erkek" else "Hanım"
+            ctx.clearRect(0,0,canvas.width,canvas.height);
 
-        st.success(f"🎉 Siparişiniz Başarıyla Alındı!")
-        st.info(
-            f"📋 **Sipariş Detayı:** {isim.title()} {hitap}, {yemek} ve {icecek} masanıza geliyor. (Masa No: {masa})")
+            // Yılanı sadece yön tuşuna basıldıysa ilerlet
+            if (oyunBasladi) {
+                yilan.x += yilan.dx;
+                yilan.y += yilan.dy;
+            }
 
-        # Düzeltilen kısım burası:
-        st.metric(label="Ödenecek Toplam Tutar", value=f"{toplam_hesap} TL")
+            // Duvarlardan geçiş
+            if (yilan.x < 0) { yilan.x = canvas.width - grid; }
+            else if (yilan.x >= canvas.width) { yilan.x = 0; }
+            
+            if (yilan.y < 0) { yilan.y = canvas.height - grid; }
+            else if (yilan.y >= canvas.height) { yilan.y = 0; }
+
+            // Yılanın gövdesi
+            if (oyunBasladi) {
+                yilan.cells.unshift({x: yilan.x, y: yilan.y});
+                if (yilan.cells.length > yilan.maxCells) {
+                    yilan.cells.pop();
+                }
+            }
+
+            // Elmayı çiz
+            ctx.fillStyle = '#ff4d4d';
+            ctx.fillRect(elma.x, elma.y, grid-1, grid-1);
+
+            // Yılanı çiz
+            yilan.cells.forEach(function(cell, index) {
+                if (index === 0) ctx.fillStyle = '#81C784'; // Kafa
+                else ctx.fillStyle = '#4CAF50'; // Gövde
+                
+                ctx.fillRect(cell.x, cell.y, grid-1, grid-1);  
+
+                // Elma yeme kontrolü
+                if (cell.x === elma.x && cell.y === elma.y) {
+                    yilan.maxCells++;
+                    skor += 10;
+                    skorElementi.textContent = skor;
+                    elmaYerlestir();
+                }
+
+                // Kendine çarpma kontrolü
+                for (let i = index + 1; i < yilan.cells.length; i++) {
+                    if (cell.x === yilan.cells[i].x && cell.y === yilan.cells[i].y && oyunBasladi) {
+                        // Oyunu sıfırla
+                        yilan.x = 160; yilan.y = 160;
+                        yilan.cells = [{x: 160, y: 160}, {x: 140, y: 160}];
+                        yilan.maxCells = 4;
+                        yilan.dx = 0; yilan.dy = 0;
+                        skor = 0;
+                        oyunBasladi = false;
+                        skorElementi.textContent = skor;
+                        elmaYerlestir();
+                    }
+                }
+            });
+        }
+
+        // Tuş Kontrolleri
+        document.addEventListener('keydown', function(e) {
+            // Sayfa kaymasını engelle
+            if([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                e.preventDefault();
+                oyunBasladi = true; // Herhangi bir yön tuşuna basılınca hareket başlasın
+            }
+
+            // Sola Dönüş (Eğer sağa gitmiyorsa veya oyun henüz başlamadıysa)
+            if (e.which === 37 && (yilan.dx === 0 || yilan.cells.length === 2)) {
+                yilan.dx = -grid; yilan.dy = 0;
+            }
+            // Yukarı Dönüş
+            else if (e.which === 38 && (yilan.dy === 0 || yilan.cells.length === 2)) {
+                yilan.dy = -grid; yilan.dx = 0;
+            }
+            // Sağa Dönüş
+            else if (e.which === 39 && (yilan.dx === 0 || yilan.cells.length === 2)) {
+                yilan.dx = grid; yilan.dy = 0;
+            }
+            // Aşağı Dönüş
+            else if (e.which === 40 && (yilan.dy === 0 || yilan.cells.length === 2)) {
+                yilan.dy = grid; yilan.dx = 0;
+            }
+        });
+
+        elmaYerlestir();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
+"""
+
+# HTML Kodunu Entegre Etme
+components.html(oyun_html, height=500)
+
+st.write("---")
+st.info("💡 Kodları GitHub'da güncellediğinizde arkadaşlarınız da bu yeni ve yavaşlatılmış versiyonu oynayabilir!")
