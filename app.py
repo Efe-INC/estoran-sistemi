@@ -95,7 +95,7 @@ oyun_html = f"""
             height: auto;
         }}
         canvas:focus {{
-            outline: none; /* Odaklanınca etrafında çizgiler çıkmasın */
+            outline: none;
         }}
 
         .dpad {{ display: flex; flex-direction: column; align-items: center; margin-top: 15px; width: 100%; max-width: 220px; }}
@@ -233,7 +233,6 @@ oyun_html = f"""
             yilan = {{ x: 160, y: 160, dx: 0, dy: 0, cells: [{{x:160,y:160}}], maxCells: 4 }};
             elmaYerlestir();
             
-            // Tıklama sonrası tam odaklanma sağlayan gecikmeli kilit sistemi
             setTimeout(() => {{
                 window.focus();
                 canvas.focus();
@@ -259,8 +258,9 @@ oyun_html = f"""
                 yilan.x += yilan.dx;
                 yilan.y += yilan.dy;
 
+                // DUVARLARDAN GEÇİŞ KONTROLLERİ (Hata Düzeltildi)
                 if (yilan.x < 0) yilan.x = canvas.width - grid;
-                else if (yilan.x >= canvas.width) yilan.width = 0;
+                else if (yilan.x >= canvas.width) yilan.x = 0;
                 if (yilan.y < 0) yilan.y = canvas.height - grid;
                 else if (yilan.y >= canvas.height) yilan.y = 0;
 
@@ -315,11 +315,10 @@ oyun_html = f"""
             else if (yon === 'DOWN' && yilan.dy === 0) {{ yilan.dy = grid; yilan.dx = 0; }}
         }}
 
-        // GÜÇLENDİRİLMİŞ SAYFA KAYMASI ENGELLEYİCİ
         window.addEventListener('keydown', function(e) {{
             const engellenecekTuslar = ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown", "Left", "Up", "Right", "Down", " "];
             if(engellenecekTuslar.indexOf(e.key) > -1) {{
-                e.preventDefault(); // Tarayıcının aşağı kaymasını KESİN olarak engeller
+                e.preventDefault();
             }}
             
             const key = e.key;
@@ -327,9 +326,8 @@ oyun_html = f"""
             else if (key === "ArrowUp" || key === "Up") yonDegistir('UP');
             else if (key === "ArrowRight" || key === "Right") yonDegistir('RIGHT');
             else if (key === "ArrowDown" || key === "Down") yonDegistir('DOWN');
-        }}, {{ passive: false }}); // passive: false tarayıcının preventDefault'u görmezden gelmesini önler
+        }}, {{ passive: false }});
 
-        // Fareyle oyuna tıklandığında da odağı kaybetmesin
         canvas.addEventListener('click', () => canvas.focus());
     </script>
 </body>
