@@ -117,7 +117,7 @@ oyun_html = f"""
         <button onclick="oyunuBaslat()">Oyuna Başla 🎮</button>
         
         <div class="skor-tablosu">
-            <h3 style="margin-top:0; color:#FFD700;">🌍 DÜNYA REKORLARI (TOP 5)</h3>
+            <h3 style="margin-top:0; color:#FFD700;">🌍 REKORLAR (TOP 5)</h3>
             <div id="kuresel-skorlar-giris">Yükleniyor...</div>
         </div>
     </div>
