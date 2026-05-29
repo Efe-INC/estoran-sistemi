@@ -4,8 +4,8 @@ import streamlit.components.v1 as components
 # Sayfa Ayarları
 st.set_page_config(page_title="🐍 Global Skorlu Yılan Oyunu", page_icon="🐍", layout="centered")
 
-st.title("🐍 Dünyanın En Rekabetçi Yılan Oyunu")
-st.write("🏆 Adınızı yazın, rekoru kırın ve adınızı tüm dünyaya duyurun!")
+st.title("🐍 Rekabetçi Yılan Oyunu")
+st.write("🏆 Adınızı yazın, rekoru kırmak için başlayın")
 
 # ⚠️ Kendi kvdb.io kodunu buraya yapıştırmayı unutma!
 BUCKET_ID = "JpGwZHKhygNoF7KWdWrFH3"
