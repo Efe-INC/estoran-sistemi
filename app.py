@@ -112,7 +112,7 @@ oyun_html = f"""
 <body>
 
     <div id="ekran-giris" class="ekran aktif">
-        <h2>🏆 ŞAMPİYONLAR LİGİ</h2>
+        <h2>🏆 Rekor İçin Başla</h2>
         <input type="text" id="oyuncu-adi" placeholder="Adınızı Yazın..." maxlength="12">
         <button onclick="oyunuBaslat()">Oyuna Başla 🎮</button>
         
